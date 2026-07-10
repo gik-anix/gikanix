@@ -125,26 +125,73 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ---------- Contact Form (Front-end only) ----------
+  // ---------- Contact Form Backend (Web3Forms) ----------
   const form = document.getElementById('contactForm');
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = form.querySelector('#formName').value;
       const email = form.querySelector('#formEmail').value;
       const message = form.querySelector('#formMessage').value;
 
-      // Show simple confirmation
       const btn = form.querySelector('.form-submit .btn');
       const originalText = btn.innerHTML;
-      btn.innerHTML = '✓ Message Sent!';
+
+      // Update button state to sending
+      btn.innerHTML = 'Sending...';
       btn.style.pointerEvents = 'none';
 
-      setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.style.pointerEvents = 'auto';
-        form.reset();
-      }, 3000);
+      // Web3Forms Access Key
+      // Generate a key at https://web3forms.com/ and paste it below
+      const accessKey = '2442a2ee-d9cf-445e-8160-6afbc34a0480';
+
+      if (accessKey === '2442a2ee-d9cf-445e-8160-6afbc34a0480') {
+        // Fallback demo behavior with alert instruction if key not set
+        setTimeout(() => {
+          btn.innerHTML = '✓ Sent (Demo Mode)';
+          alert("Contact form submitted successfully in demo mode! To receive real emails to your inbox, please get a free Access Key from https://web3forms.com/ and replace 'YOUR_ACCESS_KEY_HERE' in script.js on line 147.");
+          form.reset();
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.pointerEvents = 'auto';
+          }, 3000);
+        }, 1000);
+        return;
+      }
+
+      try {
+        const response = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            access_key: accessKey,
+            name: name,
+            email: email,
+            message: message,
+            subject: `New Portfolio Message from ${name}`
+          })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          btn.innerHTML = '✓ Message Sent!';
+          form.reset();
+        } else {
+          btn.innerHTML = '✗ Submission Failed';
+          console.error(result);
+        }
+      } catch (error) {
+        btn.innerHTML = '✗ Error Sending';
+        console.error('Error submitting form:', error);
+      } finally {
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.pointerEvents = 'auto';
+        }, 4000);
+      }
     });
   }
 
